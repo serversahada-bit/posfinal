@@ -1,0 +1,41 @@
+{
+  "name": "pos-app",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently \"node server-ws.js\" \"next dev\"",
+    "build": "next build",
+    "start": "next start --hostname 0.0.0.0",
+    "start:full": "concurrently \"node server-ws.js\" \"next start --hostname 0.0.0.0\"",
+    "start:ws": "node server-ws.js",
+    "lint": "eslint"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.10.0",
+    "concurrently": "^10.0.3",
+    "exceljs": "^4.4.0",
+    "lucide-react": "^1.23.0",
+    "mysql2": "^3.22.6",
+    "next": "16.2.10",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
+    "react-select": "^5.10.2",
+    "recharts": "^3.9.2",
+    "socket.io": "^4.8.3",
+    "socket.io-client": "^4.8.3",
+    "sweetalert2": "^11.26.25",
+    "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "dotenv": "^17.4.2",
+    "eslint": "^9",
+    "eslint-config-next": "16.2.10",
+    "prisma": "^5.10.0",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  }
+}

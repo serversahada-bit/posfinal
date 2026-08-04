@@ -1,0 +1,1018 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model activity_logs {
+  id         Int      @id @default(autoincrement())
+  user_id    Int
+  action     String   @db.VarChar(100)
+  target     String?  @db.VarChar(150)
+  details    String?  @db.Text
+  ip_address String?  @db.VarChar(50)
+  created_at DateTime @default(now()) @db.Timestamp(0)
+  users      users    @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fk_activity_logs_user")
+
+  @@index([action], map: "idx_activity_logs_action")
+  @@index([created_at], map: "idx_activity_logs_created_at")
+  @@index([user_id], map: "idx_activity_logs_user_id")
+}
+
+model ad_sources {
+  id         Int                @id @default(autoincrement())
+  name       String             @db.VarChar(150)
+  status     ad_sources_status? @default(active)
+  created_at DateTime           @default(now()) @db.Timestamp(0)
+}
+
+model advertisers {
+  id         Int                 @id @default(autoincrement())
+  name       String              @db.VarChar(150)
+  status     advertisers_status? @default(active)
+  created_at DateTime            @default(now()) @db.Timestamp(0)
+}
+
+model couriers {
+  id                      Int     @id @default(autoincrement())
+  courier_name            String? @db.VarChar(150)
+  service_type            String? @db.VarChar(150)
+  logo_path               String? @db.VarChar(255)
+  code                    String? @db.VarChar(50)
+  base_weight_gram        Int     @default(1000) @db.UnsignedInt
+  extra_weight_step_gram  Int     @default(1000) @db.UnsignedInt
+  rounding_tolerance_gram Int     @default(300) @db.UnsignedInt
+}
+
+model customer_addresses {
+  id              Int          @id @default(autoincrement())
+  customer_id     Int
+  receiver_name   String       @db.VarChar(150)
+  whatsapp_number String?      @db.VarChar(30)
+  address         String       @db.Text
+  district        String?      @db.VarChar(100)
+  city            String?      @db.VarChar(100)
+  province        String?      @db.VarChar(100)
+  postal_code     String?      @db.VarChar(20)
+  is_default      Boolean?     @default(false)
+  created_at      DateTime     @default(now()) @db.Timestamp(0)
+  customers       customers    @relation(fields: [customer_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fk_customer_addresses_customer")
+  orders          orders[]
+  orders_cso      orders_cso[]
+
+  @@index([customer_id], map: "fk_customer_addresses_customer")
+}
+
+model customers {
+  id                 Int                  @id @default(autoincrement())
+  name               String               @db.VarChar(150)
+  whatsapp_number    String?              @db.VarChar(30)
+  email              String?              @db.VarChar(150)
+  status             customers_status?    @default(active)
+  created_at         DateTime             @default(now()) @db.Timestamp(0)
+  updated_at         DateTime             @default(now()) @db.Timestamp(0)
+  address            String?              @db.Text
+  subdistrict        String?              @db.VarChar(150)
+  desa               String?              @db.VarChar(100)
+  age                Int?
+  complaint          String?              @db.Text
+  province           String?              @db.VarChar(150)
+  city               String?              @db.VarChar(150)
+  customer_addresses customer_addresses[]
+  orders             orders[]
+  orders_cso         orders_cso[]
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model data_customer {
+  id_customer       Int
+  nama_customer     String?   @db.VarChar(100)
+  alamat_customer   String?   @db.Text
+  hp_customer       String?   @db.VarChar(30)
+  desa              String?   @db.VarChar(100)
+  kecamatan         String?   @db.VarChar(100)
+  kabupaten         String?   @db.VarChar(100)
+  provinsi          String?   @db.VarChar(100)
+  kode_customer     String?   @db.VarChar(30)
+  tgl_reg           DateTime? @db.DateTime(0)
+  adv               String?   @db.VarChar(100)
+  crm               String?   @db.VarChar(100)
+  ket               String?   @db.VarChar(100)
+  ro_sheet          String?   @db.VarChar(20)
+  ro_count          String?   @db.VarChar(20)
+  tgl_terakhir      DateTime? @db.DateTime(0)
+  st_customer       Int?      @db.TinyInt
+  tgl_foll_terakhir DateTime? @db.DateTime(0)
+  klasifikasi       String?   @db.VarChar(20)
+  respon_cust       Int?
+
+  @@ignore
+}
+
+model discounts {
+  id              Int                      @id @default(autoincrement())
+  discount_name   String                   @db.VarChar(150)
+  discount_type   discounts_discount_type? @default(fixed)
+  discount_amount BigInt?                  @default(0) @db.UnsignedBigInt
+  status          discounts_status?        @default(active)
+  created_at      DateTime                 @default(now()) @db.Timestamp(0)
+  updated_at      DateTime                 @default(now()) @db.Timestamp(0)
+}
+
+model gifts {
+  id                   Int                    @id @default(autoincrement())
+  gift_name            String                 @db.VarChar(150)
+  sku                  String?                @unique(map: "sku") @db.VarChar(100)
+  price                BigInt?                @default(0) @db.UnsignedBigInt
+  weight_gram          Int?                   @default(0) @db.UnsignedInt
+  status               gifts_status?          @default(active)
+  image_url            String?                @db.VarChar(255)
+  created_at           DateTime               @default(now()) @db.Timestamp(0)
+  updated_at           DateTime               @default(now()) @db.Timestamp(0)
+  warehouse_gift_stock warehouse_gift_stock[]
+}
+
+model migrations {
+  id       Int      @id @default(autoincrement())
+  filename String   @unique(map: "filename") @db.VarChar(255)
+  run_at   DateTime @default(now()) @db.Timestamp(0)
+}
+
+model no_payment_methods {
+  id               Int      @id @default(autoincrement())
+  method_name      String   @db.VarChar(100)
+  description      String?  @db.Text
+  is_active        Boolean? @default(true)
+  no_shipping_cost Boolean? @default(false)
+}
+
+model ongkir_settings {
+  id              Int      @id @default(autoincrement())
+  courier_code    String?  @db.VarChar(50)
+  origin_code     String?  @db.VarChar(50)
+  disc_percent    Decimal? @default(0.00) @db.Decimal(5, 2)
+  gudang_fee      Decimal? @default(0.00) @db.Decimal(10, 2)
+  cod_fee_percent Decimal? @default(0.00) @db.Decimal(5, 2)
+
+  @@unique([courier_code, origin_code], map: "courier_code")
+}
+
+model order_items {
+  id           Int       @id @default(autoincrement())
+  order_id     Int
+  product_id   Int?
+  product_name String    @db.VarChar(150)
+  qty          Int       @default(1) @db.UnsignedInt
+  price        BigInt?   @default(0) @db.UnsignedBigInt
+  discount     BigInt?   @default(0) @db.UnsignedBigInt
+  subtotal     BigInt?   @default(0) @db.UnsignedBigInt
+  created_at   DateTime  @default(now()) @db.Timestamp(0)
+  is_gift      Boolean?  @default(false)
+  is_bundle    Boolean?  @default(false)
+  orders       orders    @relation(fields: [order_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fk_order_items_order")
+  products     products? @relation(fields: [product_id], references: [id], onUpdate: Restrict, map: "fk_order_items_product")
+
+  @@index([order_id], map: "fk_order_items_order")
+  @@index([product_id], map: "fk_order_items_product")
+}
+
+model order_items_crm {
+  id           Int      @id @default(autoincrement())
+  order_id     Int
+  product_id   Int?
+  product_name String   @db.VarChar(150)
+  qty          Int      @default(1) @db.UnsignedInt
+  price        BigInt?  @default(0) @db.UnsignedBigInt
+  discount     BigInt?  @default(0) @db.UnsignedBigInt
+  subtotal     BigInt?  @default(0) @db.UnsignedBigInt
+  created_at   DateTime @default(now()) @db.Timestamp(0)
+  is_gift      Boolean? @default(false)
+  is_bundle    Boolean? @default(false)
+
+  @@index([order_id], map: "fk_order_items_order")
+  @@index([product_id], map: "fk_order_items_product")
+}
+
+model order_items_cso {
+  id           Int        @id @default(autoincrement())
+  order_id     Int
+  product_id   Int?
+  product_name String     @db.VarChar(150)
+  qty          Int        @default(1) @db.UnsignedInt
+  price        BigInt?    @default(0) @db.UnsignedBigInt
+  discount     BigInt?    @default(0) @db.UnsignedBigInt
+  subtotal     BigInt?    @default(0) @db.UnsignedBigInt
+  created_at   DateTime   @default(now()) @db.Timestamp(0)
+  is_gift      Boolean?   @default(false)
+  is_bundle    Boolean?   @default(false)
+  orders_cso   orders_cso @relation(fields: [order_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fk_order_items_cso_order")
+  products     products?  @relation(fields: [product_id], references: [id], onUpdate: Restrict, map: "fk_order_items_cso_product")
+
+  @@index([order_id], map: "fk_order_items_cso_order")
+  @@index([product_id], map: "fk_order_items_cso_product")
+}
+
+model order_items_resend {
+  id           Int      @id @default(autoincrement())
+  order_id     Int
+  product_id   Int?
+  product_name String   @db.VarChar(150)
+  qty          Int      @default(1) @db.UnsignedInt
+  price        BigInt?  @default(0) @db.UnsignedBigInt
+  discount     BigInt?  @default(0) @db.UnsignedBigInt
+  subtotal     BigInt?  @default(0) @db.UnsignedBigInt
+  created_at   DateTime @default(now()) @db.Timestamp(0)
+  is_gift      Boolean? @default(false)
+  is_bundle    Boolean? @default(false)
+
+  @@index([order_id], map: "fk_order_items_order")
+  @@index([product_id], map: "fk_order_items_product")
+}
+
+model order_notes {
+  id         Int      @id @default(autoincrement())
+  order_id   Int
+  user_id    Int?
+  note       String   @db.Text
+  created_at DateTime @default(now()) @db.Timestamp(0)
+  orders     orders   @relation(fields: [order_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fk_order_notes_order")
+  users      users?   @relation(fields: [user_id], references: [id], onUpdate: Restrict, map: "fk_order_notes_user")
+
+  @@index([order_id], map: "fk_order_notes_order")
+  @@index([user_id], map: "fk_order_notes_user")
+}
+
+model order_tags {
+  id       Int    @id @default(autoincrement())
+  order_id Int
+  tag_id   Int
+  orders   orders @relation(fields: [order_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fk_order_tags_order")
+  tags     tags   @relation(fields: [tag_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fk_order_tags_tag")
+
+  @@index([order_id], map: "fk_order_tags_order")
+  @@index([tag_id], map: "fk_order_tags_tag")
+}
+
+model order_tags_crm {
+  id       Int @id @default(autoincrement())
+  order_id Int
+  tag_id   Int
+
+  @@index([order_id], map: "fk_order_tags_order")
+  @@index([tag_id], map: "fk_order_tags_tag")
+}
+
+model orders {
+  id                       Int                  @id @default(autoincrement())
+  order_code               String               @unique(map: "order_code") @db.VarChar(50)
+  scalev_order_id          String?              @db.VarChar(100)
+  customer_id              Int
+  customer_address_id      Int?
+  created_by_user_id       Int?
+  order_type               orders_order_type?   @default(normal)
+  order_source             String?              @db.VarChar(100)
+  order_status             orders_order_status? @default(pending)
+  total_product_price      BigInt?              @default(0) @db.UnsignedBigInt
+  product_discount         BigInt?              @default(0) @db.UnsignedBigInt
+  shipping_cost            BigInt?              @default(0) @db.UnsignedBigInt
+  other_fee                BigInt?              @default(0) @db.UnsignedBigInt
+  additional_shipping_cost BigInt?              @default(0) @db.UnsignedBigInt
+  shipping_discount        BigInt?              @default(0) @db.UnsignedBigInt
+  promo_id                 String?              @db.VarChar(100)
+  total_payment            BigInt?              @default(0) @db.UnsignedBigInt
+  notes                    String?              @db.Text
+  created_at               DateTime             @default(now()) @db.Timestamp(0)
+  pending_at               DateTime?            @db.Timestamp(0)
+  processing_at            DateTime?            @db.Timestamp(0)
+  updated_at               DateTime             @default(now()) @db.Timestamp(0)
+  last_update              DateTime?            @db.Timestamp(0)
+  warehouse_id             Int?
+  courier_id               Int?
+  advertiser_name          String?              @db.VarChar(150)
+  ad_source                String?              @db.VarChar(150)
+  order_items              order_items[]
+  order_notes              order_notes[]
+  order_tags               order_tags[]
+  users                    users?               @relation(fields: [created_by_user_id], references: [id], onUpdate: Restrict, map: "fk_orders_creator_user")
+  customers                customers            @relation(fields: [customer_id], references: [id], onUpdate: Restrict, map: "fk_orders_customer")
+  customer_addresses       customer_addresses?  @relation(fields: [customer_address_id], references: [id], onUpdate: Restrict, map: "fk_orders_customer_address")
+  payments                 payments[]
+  shipments                shipments[]
+
+  @@index([customer_id], map: "fk_orders_customer")
+  @@index([customer_address_id], map: "fk_orders_customer_address")
+  @@index([created_by_user_id], map: "idx_orders_created_by_user_id")
+}
+
+model orders_crm {
+  id                       Int                      @id @default(autoincrement())
+  order_code               String                   @unique(map: "order_code") @db.VarChar(50)
+  scalev_order_id          String?                  @db.VarChar(100)
+  customer_id              Int
+  customer_address_id      Int?
+  created_by_user_id       Int?
+  order_type               orders_crm_order_type?   @default(normal)
+  order_source             String?                  @db.VarChar(100)
+  order_status             orders_crm_order_status? @default(pending)
+  total_product_price      BigInt?                  @default(0) @db.UnsignedBigInt
+  product_discount         BigInt?                  @default(0) @db.UnsignedBigInt
+  shipping_cost            BigInt?                  @default(0) @db.UnsignedBigInt
+  other_fee                BigInt?                  @default(0) @db.UnsignedBigInt
+  additional_shipping_cost BigInt?                  @default(0) @db.UnsignedBigInt
+  shipping_discount        BigInt?                  @default(0) @db.UnsignedBigInt
+  promo_id                 String?                  @db.VarChar(100)
+  total_payment            BigInt?                  @default(0) @db.UnsignedBigInt
+  notes                    String?                  @db.Text
+  created_at               DateTime                 @default(now()) @db.Timestamp(0)
+  pending_at               DateTime?                @db.Timestamp(0)
+  processing_at            DateTime?                @db.Timestamp(0)
+  updated_at               DateTime                 @default(now()) @db.Timestamp(0)
+  last_update              DateTime?                @db.Timestamp(0)
+  warehouse_id             Int?
+  courier_id               Int?
+  is_ro                    Boolean?                 @default(false)
+  ro_count                 Int?                     @default(0)
+  users                    users?                   @relation(fields: [created_by_user_id], references: [id], onUpdate: Restrict, map: "fk_orders_crm_creator_user")
+
+  @@index([customer_id], map: "fk_orders_customer")
+  @@index([customer_address_id], map: "fk_orders_customer_address")
+  @@index([created_by_user_id], map: "idx_orders_crm_created_by_user_id")
+}
+
+model orders_cso {
+  id                       Int                      @id @default(autoincrement())
+  order_code               String                   @unique(map: "order_code") @db.VarChar(50)
+  scalev_order_id          String?                  @db.VarChar(100)
+  customer_id              Int
+  customer_address_id      Int?
+  created_by_user_id       Int?
+  order_type               orders_cso_order_type?   @default(normal)
+  order_source             String?                  @db.VarChar(100)
+  order_status             orders_cso_order_status? @default(pending)
+  total_product_price      BigInt?                  @default(0) @db.UnsignedBigInt
+  product_discount         BigInt?                  @default(0) @db.UnsignedBigInt
+  shipping_cost            BigInt?                  @default(0) @db.UnsignedBigInt
+  other_fee                BigInt?                  @default(0) @db.UnsignedBigInt
+  additional_shipping_cost BigInt?                  @default(0) @db.UnsignedBigInt
+  shipping_discount        BigInt?                  @default(0) @db.UnsignedBigInt
+  promo_id                 String?                  @db.VarChar(100)
+  total_payment            BigInt?                  @default(0) @db.UnsignedBigInt
+  notes                    String?                  @db.Text
+  created_at               DateTime                 @default(now()) @db.Timestamp(0)
+  pending_at                DateTime?                @db.Timestamp(0)
+  processing_at            DateTime?                @db.Timestamp(0)
+  updated_at               DateTime                 @default(now()) @db.Timestamp(0)
+  last_update              DateTime?                @db.Timestamp(0)
+  warehouse_id             Int?
+  courier_id               Int?
+  advertiser_name          String?                  @db.VarChar(150)
+  ad_source                String?                  @db.VarChar(150)
+  is_ro                    Boolean?                 @default(false)
+  ro_count                 Int?                     @default(0)
+  order_items_cso          order_items_cso[]
+  users                    users?                   @relation(fields: [created_by_user_id], references: [id], onUpdate: Restrict, map: "fk_orders_cso_creator_user")
+  customers                customers                @relation(fields: [customer_id], references: [id], onUpdate: Restrict, map: "fk_orders_cso_customer")
+  customer_addresses       customer_addresses?      @relation(fields: [customer_address_id], references: [id], onUpdate: Restrict, map: "fk_orders_cso_customer_address")
+  payments_cso             payments_cso[]
+  shipments_cso            shipments_cso[]
+
+  @@index([customer_id], map: "fk_orders_cso_customer")
+  @@index([customer_address_id], map: "fk_orders_cso_customer_address")
+  @@index([created_by_user_id], map: "idx_orders_cso_created_by_user_id")
+}
+
+model orders_resend {
+  id                       Int                         @id @default(autoincrement())
+  order_code               String                      @unique(map: "order_code") @db.VarChar(50)
+  scalev_order_id          String?                     @db.VarChar(100)
+  customer_id              Int
+  customer_address_id      Int?
+  order_type               orders_resend_order_type?   @default(normal)
+  order_source             String?                     @db.VarChar(100)
+  order_status             orders_resend_order_status? @default(pending)
+  total_product_price      BigInt?                     @default(0) @db.UnsignedBigInt
+  product_discount         BigInt?                     @default(0) @db.UnsignedBigInt
+  shipping_cost            BigInt?                     @default(0) @db.UnsignedBigInt
+  additional_shipping_cost BigInt?                     @default(0) @db.UnsignedBigInt
+  shipping_discount        BigInt?                     @default(0) @db.UnsignedBigInt
+  promo_id                 String?                     @db.VarChar(100)
+  total_payment            BigInt?                     @default(0) @db.UnsignedBigInt
+  notes                    String?                     @db.Text
+  created_at               DateTime                    @default(now()) @db.Timestamp(0)
+  processing_at            DateTime?                   @db.Timestamp(0)
+  updated_at               DateTime                    @default(now()) @db.Timestamp(0)
+  last_update              DateTime?                   @db.Timestamp(0)
+  warehouse_id             Int?
+  courier_id               Int?
+  is_ro                    Boolean?                    @default(false)
+  ro_count                 Int?                        @default(0)
+
+  @@index([customer_id], map: "fk_orders_customer")
+  @@index([customer_address_id], map: "fk_orders_customer_address")
+}
+
+model payment_accounts {
+  id             Int     @id @default(autoincrement())
+  bank_name      String? @db.VarChar(150)
+  account_name   String? @db.VarChar(150)
+  account_number String? @db.VarChar(100)
+  image_url      String? @db.VarChar(255)
+}
+
+model payments {
+  id                Int                      @id @default(autoincrement())
+  order_id          Int
+  payment_method    payments_payment_method? @default(bank_transfer)
+  bank_name         String?                  @db.VarChar(150)
+  account_name      String?                  @db.VarChar(150)
+  account_number    String?                  @db.VarChar(100)
+  payment_proof_url String?                  @db.Text
+  fat_proof_url     String?                  @db.Text
+  payment_status    payments_payment_status? @default(unpaid)
+  reject_reason     String?                  @db.Text
+  paid_at           DateTime?                @db.DateTime(0)
+  created_at        DateTime                 @default(now()) @db.Timestamp(0)
+  updated_at        DateTime                 @default(now()) @db.Timestamp(0)
+  orders            orders                   @relation(fields: [order_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fk_payments_order")
+
+  @@index([order_id], map: "fk_payments_order")
+}
+
+model payments_crm {
+  id                Int                          @id @default(autoincrement())
+  order_id          Int
+  payment_method    payments_crm_payment_method? @default(bank_transfer)
+  bank_name         String?                      @db.VarChar(150)
+  account_name      String?                      @db.VarChar(150)
+  account_number    String?                      @db.VarChar(100)
+  payment_proof_url String?                      @db.Text
+  fat_proof_url     String?                      @db.Text
+  payment_status    payments_crm_payment_status? @default(unpaid)
+  reject_reason     String?                      @db.Text
+  paid_at           DateTime?                    @db.DateTime(0)
+  created_at        DateTime                     @default(now()) @db.Timestamp(0)
+  updated_at        DateTime                     @default(now()) @db.Timestamp(0)
+
+  @@index([order_id], map: "fk_payments_order")
+}
+
+model payments_cso {
+  id                Int                          @id @default(autoincrement())
+  order_id          Int
+  payment_method    payments_cso_payment_method? @default(bank_transfer)
+  bank_name         String?                      @db.VarChar(150)
+  account_name      String?                      @db.VarChar(150)
+  account_number    String?                      @db.VarChar(100)
+  payment_proof_url String?                      @db.Text
+  fat_proof_url     String?                      @db.Text
+  payment_status    payments_cso_payment_status? @default(unpaid)
+  reject_reason     String?                      @db.Text
+  paid_at           DateTime?                    @db.DateTime(0)
+  created_at        DateTime                     @default(now()) @db.Timestamp(0)
+  updated_at        DateTime                     @default(now()) @db.Timestamp(0)
+  orders_cso        orders_cso                   @relation(fields: [order_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fk_payments_cso_order")
+
+  @@index([order_id], map: "fk_payments_cso_order")
+}
+
+model payments_resend {
+  id                Int                             @id @default(autoincrement())
+  order_id          Int
+  payment_method    payments_resend_payment_method? @default(bank_transfer)
+  bank_name         String?                         @db.VarChar(150)
+  account_name      String?                         @db.VarChar(150)
+  account_number    String?                         @db.VarChar(100)
+  payment_proof_url String?                         @db.Text
+  fat_proof_url     String?                         @db.Text
+  payment_status    payments_resend_payment_status? @default(unpaid)
+  reject_reason     String?                         @db.Text
+  paid_at           DateTime?                       @db.DateTime(0)
+  created_at        DateTime                        @default(now()) @db.Timestamp(0)
+  updated_at        DateTime                        @default(now()) @db.Timestamp(0)
+
+  @@index([order_id], map: "fk_payments_order")
+}
+
+model product_bundle_items {
+  id              Int             @id @default(autoincrement())
+  bundle_id       Int
+  product_id      Int
+  qty             Int             @default(1) @db.UnsignedInt
+  product_bundles product_bundles @relation(fields: [bundle_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fk_bundle_items_bundle")
+  products        products        @relation(fields: [product_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fk_bundle_items_product")
+
+  @@index([bundle_id], map: "fk_bundle_items_bundle")
+  @@index([product_id], map: "fk_bundle_items_product")
+}
+
+model product_bundles {
+  id                   Int                     @id @default(autoincrement())
+  bundle_name          String                  @db.VarChar(150)
+  sku                  String?                 @unique(map: "sku") @db.VarChar(100)
+  price                BigInt?                 @default(0) @db.UnsignedBigInt
+  status               product_bundles_status? @default(active)
+  image_url            String?                 @db.VarChar(255)
+  created_at           DateTime                @default(now()) @db.Timestamp(0)
+  updated_at           DateTime                @default(now()) @db.Timestamp(0)
+  product_bundle_items product_bundle_items[]
+}
+
+model products {
+  id                   Int                    @id @default(autoincrement())
+  product_name         String                 @db.VarChar(150)
+  product_code         String?                @db.VarChar(100)
+  sku                  String?                @unique(map: "sku") @db.VarChar(100)
+  price                BigInt?                @default(0) @db.UnsignedBigInt
+  weight_gram          Int?                   @default(0) @db.UnsignedInt
+  status               products_status?       @default(active)
+  image_url            String?                @db.VarChar(255)
+  created_at           DateTime               @default(now()) @db.Timestamp(0)
+  updated_at           DateTime               @default(now()) @db.Timestamp(0)
+  order_items          order_items[]
+  order_items_cso      order_items_cso[]
+  product_bundle_items product_bundle_items[]
+  warehouse_stock      warehouse_stock[]
+}
+
+model promos {
+  id              Int               @id @default(autoincrement())
+  promo_name      String            @db.VarChar(255)
+  promo_type      promos_promo_type @default(fisik)
+  promo_code      String?           @db.VarChar(100)
+  discount_amount Decimal           @default(0.00) @db.Decimal(15, 2)
+  start_date      DateTime?         @db.Date
+  end_date        DateTime?         @db.Date
+  status          promos_status?    @default(active)
+  created_at      DateTime          @default(now()) @db.Timestamp(0)
+  updated_at      DateTime          @default(now()) @db.Timestamp(0)
+}
+
+model shipments {
+  id                Int                        @id @default(autoincrement())
+  order_id          Int
+  warehouse_id      Int?
+  courier_name      String?                    @db.VarChar(100)
+  courier_service   String?                    @db.VarChar(100)
+  shipping_cost     BigInt?                    @default(0) @db.UnsignedBigInt
+  total_weight_gram Int?                       @default(0) @db.UnsignedInt
+  tracking_number   String?                    @db.VarChar(100)
+  shipment_status   shipments_shipment_status? @default(pending)
+  created_at        DateTime                   @default(now()) @db.Timestamp(0)
+  updated_at        DateTime                   @default(now()) @db.Timestamp(0)
+  orders            orders                     @relation(fields: [order_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fk_shipments_order")
+  warehouses        warehouses?                @relation(fields: [warehouse_id], references: [id], onUpdate: Restrict, map: "fk_shipments_warehouse")
+
+  @@index([order_id], map: "fk_shipments_order")
+  @@index([warehouse_id], map: "fk_shipments_warehouse")
+}
+
+model shipments_crm {
+  id                Int                            @id @default(autoincrement())
+  order_id          Int
+  warehouse_id      Int?
+  courier_name      String?                        @db.VarChar(100)
+  courier_service   String?                        @db.VarChar(100)
+  shipping_cost     BigInt?                        @default(0) @db.UnsignedBigInt
+  total_weight_gram Int?                           @default(0) @db.UnsignedInt
+  tracking_number   String?                        @db.VarChar(100)
+  shipment_status   shipments_crm_shipment_status? @default(pending)
+  created_at        DateTime                       @default(now()) @db.Timestamp(0)
+  updated_at        DateTime                       @default(now()) @db.Timestamp(0)
+
+  @@index([order_id], map: "fk_shipments_order")
+  @@index([warehouse_id], map: "fk_shipments_warehouse")
+}
+
+model shipments_cso {
+  id                Int                            @id @default(autoincrement())
+  order_id          Int
+  warehouse_id      Int?
+  courier_name      String?                        @db.VarChar(100)
+  courier_service   String?                        @db.VarChar(100)
+  shipping_cost     BigInt?                        @default(0) @db.UnsignedBigInt
+  total_weight_gram Int?                           @default(0) @db.UnsignedInt
+  tracking_number   String?                        @db.VarChar(100)
+  shipment_status   shipments_cso_shipment_status? @default(pending)
+  created_at        DateTime                       @default(now()) @db.Timestamp(0)
+  updated_at        DateTime                       @default(now()) @db.Timestamp(0)
+  orders_cso        orders_cso                     @relation(fields: [order_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fk_shipments_cso_order")
+  warehouses        warehouses?                    @relation(fields: [warehouse_id], references: [id], onUpdate: Restrict, map: "fk_shipments_cso_warehouse")
+
+  @@index([order_id], map: "fk_shipments_cso_order")
+  @@index([warehouse_id], map: "fk_shipments_cso_warehouse")
+}
+
+model shipments_resend {
+  id                Int                               @id @default(autoincrement())
+  order_id          Int
+  warehouse_id      Int?
+  courier_name      String?                           @db.VarChar(100)
+  courier_service   String?                           @db.VarChar(100)
+  shipping_cost     BigInt?                           @default(0) @db.UnsignedBigInt
+  total_weight_gram Int?                              @default(0) @db.UnsignedInt
+  tracking_number   String?                           @db.VarChar(100)
+  shipment_status   shipments_resend_shipment_status? @default(pending)
+  created_at        DateTime                          @default(now()) @db.Timestamp(0)
+  updated_at        DateTime                          @default(now()) @db.Timestamp(0)
+
+  @@index([order_id], map: "fk_shipments_order")
+  @@index([warehouse_id], map: "fk_shipments_warehouse")
+}
+
+model shipping_discount_settings {
+  id             Int      @id @default(autoincrement())
+  type           String   @db.VarChar(50)
+  target_id      String   @db.VarChar(50)
+  discount_value Decimal  @db.Decimal(10, 2)
+  created_at     DateTime @default(now()) @db.Timestamp(0)
+  updated_at     DateTime @default(now()) @db.Timestamp(0)
+
+  @@unique([type, target_id], map: "type_target")
+}
+
+model shipping_rates {
+  id               Int     @id @default(autoincrement())
+  kode_asal        String? @db.VarChar(50)
+  warehouse_origin String? @db.VarChar(50)
+  kode_tujuan      String? @db.VarChar(50)
+  nama_tujuan      String? @db.VarChar(255)
+  harga_jne        Int?
+  estimasi_jne     String? @db.VarChar(100)
+  harga_ninja      Int?
+  estimasi_ninja   String? @db.VarChar(100)
+  harga_jnt        Int?
+  estimasi_jnt     String? @db.VarChar(100)
+  harga_pos        Int?
+  estimasi_pos     String? @db.VarChar(100)
+  harga_lion       Int?
+  estimasi_lion    String? @db.VarChar(100)
+
+  @@index([warehouse_origin, nama_tujuan(length: 100)], map: "idx_origin_tujuan")
+}
+
+model shipping_weight_settings {
+  id                       Int      @id @db.UnsignedTinyInt
+  default_item_weight_gram Int      @default(200) @db.UnsignedInt
+  base_weight_gram         Int      @default(1000) @db.UnsignedInt
+  extra_weight_step_gram   Int      @default(1000) @db.UnsignedInt
+  rounding_tolerance_gram  Int      @default(300) @db.UnsignedInt
+  updated_at               DateTime @default(now()) @db.Timestamp(0)
+}
+
+model tags {
+  id         Int          @id @default(autoincrement())
+  tag_name   String       @unique(map: "tag_name") @db.VarChar(100)
+  created_at DateTime     @default(now()) @db.Timestamp(0)
+  order_tags order_tags[]
+}
+
+model tarif_pengiriman {
+  id              Int     @id @default(autoincrement())
+  kode_asal       String? @db.VarChar(50)
+  kode_tujuan     String? @db.VarChar(50)
+  nama_tujuan     String? @db.VarChar(255)
+  kurir           String? @db.VarChar(20)
+  harga           String? @db.VarChar(50)
+  estimasi        String? @db.VarChar(100)
+  out_of_coverage String? @db.VarChar(50)
+
+  @@index([kode_asal, nama_tujuan], map: "idx_rute")
+}
+
+model users {
+  id            Int             @id @default(autoincrement())
+  name          String          @db.VarChar(100)
+  email         String          @unique(map: "email") @db.VarChar(150)
+  password      String          @db.VarChar(255)
+  role          users_role?     @default(admin)
+  permissions   String?         @db.Text
+  created_at    DateTime        @default(now()) @db.Timestamp(0)
+  updated_at    DateTime        @default(now()) @db.Timestamp(0)
+  activity_logs activity_logs[]
+  order_notes   order_notes[]
+  orders        orders[]
+  orders_crm    orders_crm[]
+  orders_cso    orders_cso[]
+}
+
+model warehouse_gift_stock {
+  gift_id      Int
+  warehouse_id Int
+  stock        Int        @default(0)
+  gifts        gifts      @relation(fields: [gift_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fk_wh_gift_stock_gift")
+  warehouses   warehouses @relation(fields: [warehouse_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fk_wh_gift_stock_wh")
+
+  @@id([gift_id, warehouse_id])
+  @@index([warehouse_id], map: "fk_wh_gift_stock_wh")
+}
+
+model warehouse_stock {
+  id           Int        @id @default(autoincrement())
+  product_id   Int
+  warehouse_id Int
+  stock        Int        @default(0)
+  created_at   DateTime   @default(now()) @db.Timestamp(0)
+  updated_at   DateTime   @default(now()) @db.Timestamp(0)
+  products     products   @relation(fields: [product_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "warehouse_stock_ibfk_1")
+  warehouses   warehouses @relation(fields: [warehouse_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "warehouse_stock_ibfk_2")
+
+  @@unique([product_id, warehouse_id], map: "unique_product_warehouse")
+  @@index([warehouse_id], map: "warehouse_id")
+}
+
+model warehouses {
+  id                   Int                    @id @default(autoincrement())
+  warehouse_name       String                 @db.VarChar(150)
+  address              String?                @db.Text
+  district             String?                @db.VarChar(100)
+  city                 String?                @db.VarChar(100)
+  province             String?                @db.VarChar(100)
+  pic_name             String?                @db.VarChar(100)
+  created_at           DateTime               @default(now()) @db.Timestamp(0)
+  updated_at           DateTime               @default(now()) @db.Timestamp(0)
+  code                 String?                @db.VarChar(50)
+  distance_km          Int?                   @default(0)
+  image_url            String?                @db.VarChar(255)
+  shipments            shipments[]
+  shipments_cso        shipments_cso[]
+  warehouse_gift_stock warehouse_gift_stock[]
+  warehouse_stock      warehouse_stock[]
+}
+
+enum advertisers_status {
+  active
+  inactive
+}
+
+enum ad_sources_status {
+  active
+  inactive
+}
+
+enum discounts_discount_type {
+  percentage
+  fixed
+}
+
+enum payments_payment_method {
+  bank_transfer
+  cod
+  ewallet
+  free
+}
+
+enum payments_crm_payment_method {
+  bank_transfer
+  cod
+  ewallet
+  free
+}
+
+enum payments_cso_payment_method {
+  bank_transfer
+  cod
+  ewallet
+  free
+}
+
+enum payments_resend_payment_method {
+  bank_transfer
+  cod
+  ewallet
+  free
+}
+
+enum promos_promo_type {
+  fisik
+  voucher
+  digital
+}
+
+enum customers_status {
+  active
+  banned
+}
+
+enum discounts_status {
+  active
+  inactive
+}
+
+enum product_bundles_status {
+  active
+  inactive
+}
+
+enum users_role {
+  admin
+  finance
+  warehouse
+  cs
+  owner
+  cs_crm
+}
+
+enum gifts_status {
+  active
+  inactive
+}
+
+enum orders_resend_order_type {
+  normal
+  endorse
+  reseller
+  free_order
+}
+
+enum orders_order_type {
+  normal
+  endorse
+  reseller
+  free_order
+}
+
+enum orders_crm_order_type {
+  normal
+  endorse
+  reseller
+  free_order
+}
+
+enum orders_cso_order_type {
+  normal
+  endorse
+  reseller
+  free_order
+}
+
+enum products_status {
+  active
+  inactive
+}
+
+enum orders_resend_order_status {
+  pending
+  paid
+  processing
+  ready_to_ship
+  shipped
+  completed
+  cancelled
+  rts
+  problem
+}
+
+enum promos_status {
+  active
+  inactive
+}
+
+enum orders_order_status {
+  pending
+  paid
+  processing
+  ready_to_ship
+  shipped
+  completed
+  cancelled
+  rts
+  problem
+}
+
+enum orders_crm_order_status {
+  pending
+  paid
+  processing
+  ready_to_ship
+  shipped
+  completed
+  cancelled
+  rts
+  problem
+}
+
+enum orders_cso_order_status {
+  pending
+  paid
+  processing
+  ready_to_ship
+  shipped
+  completed
+  cancelled
+  rts
+  problem
+}
+
+enum payments_payment_status {
+  unpaid
+  waiting_confirmation
+  paid
+  rejected
+}
+
+enum payments_crm_payment_status {
+  unpaid
+  waiting_confirmation
+  paid
+  rejected
+}
+
+enum payments_cso_payment_status {
+  unpaid
+  waiting_confirmation
+  paid
+  rejected
+}
+
+enum payments_resend_payment_status {
+  unpaid
+  waiting_confirmation
+  paid
+  rejected
+}
+
+enum shipments_shipment_status {
+  pending
+  ready
+  picked_up
+  shipped
+  delivered
+  cancelled
+}
+
+enum shipments_crm_shipment_status {
+  pending
+  ready
+  picked_up
+  shipped
+  delivered
+  cancelled
+}
+
+enum shipments_cso_shipment_status {
+  pending
+  ready
+  picked_up
+  shipped
+  delivered
+  cancelled
+}
+
+enum shipments_resend_shipment_status {
+  pending
+  ready
+  picked_up
+  shipped
+  delivered
+  cancelled
+}
+
+model landing_pages {
+  id            Int      @id @default(autoincrement())
+  title         String   @db.VarChar(150)
+  slug          String   @unique @db.VarChar(100)
+  html_data     String   @db.LongText
+  blocks_json   String?  @db.LongText
+  status        String   @default("Draft") @db.VarChar(50)
+  domain        String?  @db.VarChar(255)
+  domain_status       String   @default("inactive") @db.VarChar(50)
+  cf_hostname_id      String?  @db.VarChar(100)
+  cf_ownership_name   String?  @db.VarChar(255)
+  cf_ownership_value  String?  @db.VarChar(255)
+  cf_ssl_name         String?  @db.VarChar(255)
+  cf_ssl_value        String?  @db.VarChar(255)
+  created_at          DateTime @default(now()) @db.Timestamp(0)
+  updated_at    DateTime @default(now()) @db.Timestamp(0)
+}
+
+model scalev {
+  id         Int            @id @default(autoincrement())
+  name       String         @db.VarChar(150)
+  api_key    String?        @db.VarChar(255)
+  url        String?        @db.VarChar(255)
+  status     scalev_status? @default(active)
+  created_at DateTime       @default(now()) @db.Timestamp(0)
+}
+
+enum scalev_status {
+  active
+  inactive
+}
+
+
+
+model scalev_sync_queue {
+  id              Int      @id @default(autoincrement())
+  scalev_order_id String   @unique @db.VarChar(100)
+  target_status   String   @db.VarChar(50)
+  created_at      DateTime @default(now())
+}
+
+model global_settings {
+  id    Int    @id @default(autoincrement())
+  key   String @unique @db.VarChar(100)
+  value String @db.Text
+}

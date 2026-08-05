@@ -30,7 +30,15 @@ type CustomerSearchResult = {
   desa: string;
   city: string;
   province: string;
-  registered_at: Date | string | null;
+  registered_at: Date | null;
+};
+
+const normalizeRegisteredAt = (value: Date | string | null) => {
+  if (!value) {
+    return null;
+  }
+
+  return value instanceof Date ? value : new Date(value);
 };
 
 export async function GET(request: Request) {
@@ -106,7 +114,7 @@ export async function GET(request: Request) {
           desa: order.desa || '',
           city: order.kota_kabupaten || '',
           province: order.provinsi || '',
-          registered_at: order.created_at,
+          registered_at: normalizeRegisteredAt(order.created_at),
         });
       });
 
@@ -122,7 +130,7 @@ export async function GET(request: Request) {
           desa: customer.desa || '',
           city: customer.city || '',
           province: customer.province || '',
-          registered_at: customer.created_at,
+          registered_at: normalizeRegisteredAt(customer.created_at),
         });
       });
 

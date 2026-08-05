@@ -327,8 +327,10 @@ export default function DashboardPage() {
                         tickFormatter={(value: number) => formatCompactCurrency(value)}
                       />
                       <Tooltip
-                        formatter={(value: number, name: string) => [
-                          name === 'total_amount' ? formatCurrency(value) : value,
+                        formatter={(value, name) => [
+                          name === 'total_amount' && typeof value === 'number'
+                            ? formatCurrency(value)
+                            : value ?? '-',
                           name === 'total_amount' ? 'Nominal' : 'Jumlah Order',
                         ]}
                         labelFormatter={(value) => `Tanggal ${formatChartDate(String(value))}`}
@@ -433,3 +435,4 @@ export default function DashboardPage() {
     </section>
   );
 }
+

@@ -1,3 +1,4 @@
+import { Prisma } from '@prisma/client';
 import { NextResponse } from 'next/server';
 
 import prisma from '@/lib/db';
@@ -118,7 +119,7 @@ export async function POST(request: Request) {
     }
 
     if (action === 'bulk_delete') {
-      const processDelete = async (tx: typeof prisma, ids: number[]) => {
+      const processDelete = async (tx: Prisma.TransactionClient, ids: number[]) => {
         if (ids.length === 0) return;
 
         for (const deleteId of ids) {

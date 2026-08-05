@@ -60,6 +60,10 @@ type ExportItemRow = RowDataPacket & {
   product_code: string | null;
 };
 
+type PromoRow = RowDataPacket & {
+  promo_name: string;
+};
+
 const toSafeNumber = (value: unknown): number => Number(value || 0);
 const toSafeString = (value: unknown): string => (value == null ? '' : String(value));
 const toExcelValue = (value: unknown): string | number | Date => {
@@ -364,7 +368,7 @@ export async function POST(request: Request) {
         const promoNames: string[] = [];
         for (const pid of promoIds) {
           if (!promoCache[pid]) {
-            const [promoRows] = await pool.query<Array<{ promo_name: string }>>('SELECT promo_name FROM promos WHERE id = ? LIMIT 1', [Number(pid)]);
+            const [promoRows] = await pool.query<PromoRow[]>('SELECT promo_name FROM promos WHERE id = ? LIMIT 1', [Number(pid)]);
             promoCache[pid] = promoRows[0]?.promo_name || '-';
           }
           promoNames.push(promoCache[pid]);
